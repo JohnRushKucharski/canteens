@@ -1,62 +1,87 @@
 name: Publish to PyPi
 on:
-    push:
-        branches:
-            - main
+  push:
+    branches:
+    - main
 jobs:
     build:
-        name: Build
-        runs-on: ubuntu-latest
-        steps:
-            - uses: actions/checkout@v4
-
-            - name: Setup Python
-              uses: actions/setup-python@v4
-              with:
-                python-version: 3.12
-                cache: pip
+      name: Build
+      runs-on: ubuntu-latest
+      
+      steps:
+      - uses: actions/checkout@v4
+      
+      - name: Setup Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: 3.12
+          cache: pip
             
-            - name: Install dependencies
-              run: pip install -r requirements.txt
+      - name: Install dependencies
+        run: pip install -r requirements.txt
             
-            - name: Run tests
-              run: python -B -m pytest
+      - name: Run tests
+        run: python -B -m pytest
 
-            - name: Install pypa/build
-              run: >-
-                python3 -m
-                pip install build --user
+      - name: Install pypa/build
+        run: >-
+          python3 -m
+          pip install build --user
             
-            - name: Build binaries
-              run: python3 -m build
+      - name: Build binaries
+        run: python3 -m build
 
-            - name: Store distribution
-              uses: actions/upload-artifact@v3
-              with:
-                name: python-package-distributions
-                path: dist/
+      - name: Store distribution
+        uses: actions/upload-artifact@v3
+        with:
+          name: python-package-distributions
+          path: dist/
     
     publish-to-test-pypi:
-        name: Publish to Test PyPi
-        needs: 
-        - build
-        runs-on: ubuntu-latest
+      name: Publish to Test PyPi
+      needs: 
+      - build
+      runs-on: ubuntu-latest
 
-        environment:
-            name: testpypi
-            url: https://test.pypi.org/p/canteens
+      environment:
+        name: testpypi
+        url: https://test.pypi.org/p/canteens
         
-        permissions:
-            id-token: write
+      permissions:
+        id-token: write
         
-        steps:
-            - name: Download distribution
-              uses: actions/download-artifact@v3
-              with:
-                name: python-package-distributions
-                path: dist/
-            - name: Publish distribution
-              uses: pypa/gh-action-pypi-publish@release/v1
-              with:
-                repository-url: https://test.pypi.org/legacy/
+      steps:
+      - name: Download distribution
+        uses: actions/download-artifact@v3
+        with:
+          name: python-package-distributions
+          path: dist/
 
+      - name: Publish distribution
+        uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          repository-url: https://test.pypi.org/legacy/
+
+    publish-to-pypi:
+      name: Publish to PyPi
+      if: startsWith(github.ref, 'refs/tags/')
+      needs: 
+      - build
+      runs-on: ubuntu-latest
+
+      environment:
+        name: pypi
+        url: https://pypi.org/p/canteens
+      
+      permissions:
+          id-token: write
+      
+      steps:
+      - name: Download distribution
+        uses: actions/download-artifact@v3
+        with:
+          name: python-package-distributions
+          path: dist/
+      
+      - name: Publish distribution
+        uses: pypa/gh-action-pypi-publish@release/v1
