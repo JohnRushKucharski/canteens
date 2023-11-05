@@ -44,11 +44,11 @@ jobs:
         runs-on: ubuntu-latest
 
         environment:
-            name: testpypi
-            url: https://test.pypi.org/p/canteens
+          name: testpypi
+          url: https://test.pypi.org/p/canteens
         
         permissions:
-            id-token: write
+          id-token: write
         
         steps:
         - name: Download distribution packages
@@ -70,11 +70,11 @@ jobs:
         runs-on: ubuntu-latest
 
         environment:
-            name: pypi
-            url: https://pypi.org/p/canteens
+          name: pypi
+          url: https://pypi.org/p/canteens
         
         permissions:
-            id-token: write
+          id-token: write
         
         steps:
         - name: Download distribution packages
