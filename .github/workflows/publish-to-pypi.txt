@@ -1,0 +1,125 @@
+name: Publish to PyPi
+on:
+    push:
+        branches:
+            - main
+jobs:
+    build:
+        name: Build
+        runs-on: ubuntu-latest
+        steps:
+            - uses: actions/checkout@v4
+            
+            - name: Setup Python
+              uses: actions/setup-python@v4
+              with:
+                python-version: 3.12
+                cache: pip
+            
+            - name: Install dependencies
+              run: pip install -r requirements.txt
+            
+            - name: Run tests
+              run: python -B -m pytest
+            
+            - name: Install pypa/build
+              run: >- 
+                python3 -m 
+                pip install build --user
+            
+            - name: Build binary wheel and source tarball
+              run: python3 -m build
+
+            - name: Store distribution packages
+              uses: actions/upload-artifact@v3
+              with:
+                name: python-package-distributions
+                path: dist/
+    
+    # https://packaging.python.org/en/latest/guides/publishing-package-distribution-releases-using-github-actions-ci-cd-workflows/
+    publish-to-test-pypi:
+        name: Publish to Test PyPi
+        needs: 
+        - build
+        runs-on: ubuntu-latest
+
+        environment:
+          name: testpypi
+          url: https://test.pypi.org/p/canteens
+        
+        permissions:
+          id-token: write
+        
+        steps:
+        - name: Download distribution packages
+          uses: actions/download-artifact@v3
+          with:
+            name: python-package-distributions
+            path: dist/
+        
+        - name: Publish distribution
+          uses: pypa/gh-action-pypi-publish@release/v1
+          with:
+            repository-url: https://test.pypi.org/legacy/
+    
+    publish-to-pypi:
+        name: Publish to PyPi
+        if: startsWith(github.ref, 'refs/tags/')
+        needs: 
+        - build
+        runs-on: ubuntu-latest
+
+        environment:
+          name: pypi
+          url: https://pypi.org/p/canteens
+        
+        permissions:
+          id-token: write
+        
+        steps:
+        - name: Download distribution packages
+          uses: actions/download-artifact@v3
+          with:
+            name: python-package-distributions
+            path: dist/
+        
+        - name: Publish distribution
+          uses: pypa/gh-action-pypi-publish@release/v1
+
+    github-release:
+      name: Sign distribution with Sigstore and upload to GitHub Release
+      needs:
+      - publish-to-pypi
+      runs-on: ubuntu-latest
+
+      permissions:
+        contents: write
+        id-token: write
+      
+      steps:
+      - name: Download distribution packages
+        uses: actions/download-artifact@v3
+        with:
+          name: python-package-distributions
+          path: dist/
+      
+      - name: Sign distribution
+        uses: sigstore/gh-action-sigstore-python@v1.2.3
+        with:
+          inputs: >-
+            ./dist/*.tar.gz
+            ./dist/*.whl
+      
+      - name: Create Release
+        run: >-
+          gh release create
+          '${{ github.ref_name }}'
+          --notes ""
+      
+      - name: Upload distribution
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: >-
+          gh release upload
+          '${{ github.ref_name }}' dist/**
+          --repo ${{ github.repository }}
