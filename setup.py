@@ -1,4 +1,4 @@
-'''Required to buld canteen as a package.'''
+'''Required to buld canteens as a package.'''
 
 from setuptools import setup, find_packages
 
@@ -6,14 +6,14 @@ with open('README.md', 'r', encoding='utf-8') as f:
     long_description = f.read()
 
 setup(
-    name='canteen',
+    name='canteens',
     version='0.0.1',
     description='A water resources reservoirs system model.',
     package_dir={'': 'src'},
     packages=find_packages(where='src'),
     long_description=long_description,
     long_description_content_type='text/markdown',
-    url='https://github.com/JohnRushKucharski/canteen',
+    url='https://github.com/JohnRushKucharski/canteens',
     author='JohnRushKucharski',
     author_email='johnkucharski@gmail.com',
     license='GNU GPLv3',
