@@ -65,7 +65,7 @@ jobs:
 
     publish-to-pypi:
       name: Publish to PyPi
-      #if: startsWith(github.ref, 'refs/tags/')
+      if: startsWith(github.ref, 'refs/tags/')
       needs: 
       - build
       runs-on: ubuntu-latest
@@ -86,4 +86,41 @@ jobs:
       
       - name: Publish distribution
         uses: pypa/gh-action-pypi-publish@release/v1
+    
+    github-release:
+      name: Create GitHub Release
+      needs:
+      - publish-to-pypi
+      runs-on: ubuntu-latest
 
+      permissions:
+        contents: write
+        id-token: write
+      
+      steps:
+      - name: Download distributions
+        uses: actions/download-artifact@v3
+        with:
+          name: python-package-distributions
+          path: dist/
+      
+      - name: Sign distribution
+        uses: sigstore/gh-action-sigstore-python@v1.2.3
+        with:
+          inputs: >-
+            ./dist/*.tar.gz
+            ./dist/*.whl
+      
+      - name: Create release
+        run: >-
+          gh release create
+          '${{ github.ref_name}}'
+          --notes ""
+      
+      - name: Upload artifact signatures to GitHub release
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: >-
+          gh release upload
+          '${{ github.ref_name }}' dist/**
+          --repo '${{ github.repository }}'
