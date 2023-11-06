@@ -7,7 +7,7 @@ with open('README.md', 'r', encoding='utf-8') as f:
 
 setup(
     name='canteens',
-    version='0.0.5',
+    version='0.0.6',
     description='A water resources reservoirs system model.',
     package_dir={'': 'src'},
     packages=find_packages(where='src'),
