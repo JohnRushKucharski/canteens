@@ -119,7 +119,7 @@ jobs:
       
       - name: Upload artifact signatures to GitHub release
         env:
-          GITHUB_TOKEN: ${{ github.token }}
+          GH_TOKEN: ${{ github.token }}
         run: >-
           gh release upload
           '${{ github.ref_name }}' dist/**
